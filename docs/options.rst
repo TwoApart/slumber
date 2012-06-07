@@ -52,7 +52,6 @@ Slumber assumes by default that all urls should end with a slash. If you do not
 want this behavior you can control it via the append_slash option which can be
 set by passing append_slash to the ``slumber.API`` kwargs.
 
-
 Default parameters
 ==================
 You can specify default parameters used for every request. This is especially
@@ -65,4 +64,30 @@ Example::
     }
     api = slumber.API("http://path/to/my/api/", default_params=params)
 
-    
+=======
+Headers
+=======
+
+By default, Slumber adds two headers to the requests: ``Content-Type`` and ``Accept``.
+Both get their value from the content type of the serializer which, in turn, gets it from
+the given ``format``. If none is given, it defaults to JSON.
+
+On top of that, Slumber lets you customize the headers that are finally sent through two
+mechanisms. The first one is specifying a ``headers`` parameter at the API level:::
+
+    # per-API headers: these will appear in every request done by using the same api
+    api = slumber.API("http://path/to/my/api/", headers={'custom-api-header': '42'})
+
+Such parameter will ensure that those headers will always appear in all requests done
+through ``api``.
+
+The other mechanism is specifying a ``headers`` parameter per-request:::
+
+    # per-HTTP-verb headers: these will only appear in this request
+    api.resource_name.get(headers={'custom-per-method-header': '3.14'})
+
+In this case, the request will carry the API-level headers plus the given headers for the
+specific request.
+
+Note that, although generally undesirable, the ``Content-Type`` and ``Accept`` headers can
+be overriden by passing them as headers through any of these two mechanisms.
