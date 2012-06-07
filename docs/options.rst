@@ -51,3 +51,18 @@ Slashes
 Slumber assumes by default that all urls should end with a slash. If you do not
 want this behavior you can control it via the append_slash option which can be
 set by passing append_slash to the ``slumber.API`` kwargs.
+
+
+Default parameters
+==================
+You can specify default parameters used for every request. This is especially
+handy if you need to pass your authentication values using params.
+
+Example::
+    params = {
+        'username': 'myuser',
+        'api_key': 'the-api-key'
+    }
+    api = slumber.API("http://path/to/my/api/", default_params=params)
+
+    

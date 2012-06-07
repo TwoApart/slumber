@@ -98,6 +98,7 @@ class Resource(ResourceAttributesMixin, object):
         if self._store["append_slash"] and not url.endswith("/"):
             url = url + "/"
 
+        params = dict(self._store["default_params"].items() + params.items())
         verify_ssl = self._store["verify_ssl"]
         headers = {"content-type": s.get_content_type(), "accept": s.get_content_type()}
 
@@ -162,13 +163,14 @@ class Resource(ResourceAttributesMixin, object):
 
 class API(ResourceAttributesMixin, object):
 
-    def __init__(self, base_url=None, auth=None, format=None, append_slash=True, session=None, verify_ssl=True):
+    def __init__(self, base_url=None, auth=None, format=None, append_slash=True, session=None, verify_ssl=True, default_params=None):
         self._store = {
             "base_url": base_url,
             "format": format if format is not None else "json",
             "append_slash": append_slash,
             "session": requests.session(auth=auth) if session is None else session,
             "verify_ssl": verify_ssl,
+            "default_params": default_params if default_params is not None else {},
         }
 
         # Do some Checks for Required Values
