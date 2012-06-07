@@ -91,14 +91,18 @@ class Resource(ResourceAttributesMixin, object):
     def get_serializer(self):
         return Serializer(default_format=self._store["format"])
 
-    def _request(self, method, data=None, params=None):
+    def _request(self, method, data=None, params=None, headers=None):
         s = self.get_serializer()
         url = self._store["base_url"]
 
         if self._store["append_slash"] and not url.endswith("/"):
             url = url + "/"
 
-        resp = self._store["session"].request(method, url, data=data, params=params, headers={"content-type": s.get_content_type(), "accept": s.get_content_type()})
+        _headers = {"content-type": s.get_content_type(), "accept": s.get_content_type()}
+        _headers.update(self._store["headers"])
+        _headers.update(headers or {})
+
+        resp = self._store["session"].request(method, url, data=data, params=params, headers=_headers)
 
         if 400 <= resp.status_code <= 499:
             raise exceptions.HttpClientError("Client Error %s: %s" % (resp.status_code, url), response=resp, content=resp.content)
@@ -110,7 +114,9 @@ class Resource(ResourceAttributesMixin, object):
     def get(self, **kwargs):
         s = self.get_serializer()
 
-        resp = self._request("GET", params=kwargs)
+        headers = None if 'headers' not in kwargs else kwargs.pop('headers')
+
+        resp = self._request("GET", params=kwargs, headers=headers)
         if 200 <= resp.status_code <= 299:
             if resp.status_code == 200:
                 return s.loads(resp.content)
@@ -122,7 +128,9 @@ class Resource(ResourceAttributesMixin, object):
     def post(self, data, **kwargs):
         s = self.get_serializer()
 
-        resp = self._request("POST", data=s.dumps(data), params=kwargs)
+        headers = None if 'headers' not in kwargs else kwargs.pop('headers')
+
+        resp = self._request("POST", data=s.dumps(data), params=kwargs, headers=headers)
         if 200 <= resp.status_code <= 299:
             if resp.status_code == 201:
                 # @@@ Hacky, see description in __call__
@@ -137,7 +145,9 @@ class Resource(ResourceAttributesMixin, object):
     def put(self, data, **kwargs):
         s = self.get_serializer()
 
-        resp = self._request("PUT", data=s.dumps(data), params=kwargs)
+        headers = None if 'headers' not in kwargs else kwargs.pop('headers')
+
+        resp = self._request("PUT", data=s.dumps(data), params=kwargs, headers=headers)
         if 200 <= resp.status_code <= 299:
             if resp.status_code == 204:
                 return True
@@ -147,7 +157,9 @@ class Resource(ResourceAttributesMixin, object):
             return False
 
     def delete(self, **kwargs):
-        resp = self._request("DELETE", params=kwargs)
+        headers = None if 'headers' not in kwargs else kwargs.pop('headers')
+
+        resp = self._request("DELETE", params=kwargs, headers=headers)
         if 200 <= resp.status_code <= 299:
             if resp.status_code == 204:
                 return True
@@ -159,12 +171,13 @@ class Resource(ResourceAttributesMixin, object):
 
 class API(ResourceAttributesMixin, object):
 
-    def __init__(self, base_url=None, auth=None, format=None, append_slash=True, session=None):
+    def __init__(self, base_url=None, auth=None, format=None, append_slash=True, session=None, headers=None):
         self._store = {
             "base_url": base_url,
             "format": format if format is not None else "json",
             "append_slash": append_slash,
             "session": requests.session(auth=auth) if session is None else session,
+            "headers": {} if headers is None else headers,
         }
 
         # Do some Checks for Required Values
