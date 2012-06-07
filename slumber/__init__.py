@@ -98,7 +98,7 @@ class Resource(ResourceAttributesMixin, object):
         if self._store["append_slash"] and not url.endswith("/"):
             url = url + "/"
 
-        _headers = {"content-type": s.get_content_type(), "accept": s.get_content_type()}
+        _headers = {"Content-Type": s.get_content_type(), "Accept": s.get_content_type()}
         _headers.update(self._store["headers"])
         _headers.update(headers or {})
 
